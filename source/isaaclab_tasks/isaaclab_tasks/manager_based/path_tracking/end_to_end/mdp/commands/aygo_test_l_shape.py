@@ -5,7 +5,7 @@ import matplotlib.transforms as transforms
 
 
 # -----------------------------
-# 1) 원래 path (waypoints) 생성
+# 1-1) 원래 arc path (부드러운 코너)
 # -----------------------------
 
 def generate_arc_waypoints(
@@ -39,6 +39,59 @@ def generate_arc_waypoints(
 
     # 원래 yaw는 path의 접선 방향이라 가정
     yaw = angles.copy()
+
+    waypoints = np.stack([x, y, yaw], axis=-1)
+    return waypoints
+
+
+# -----------------------------
+# 1-2) 직각 L자 path 생성
+# -----------------------------
+
+def generate_right_angle_waypoints(
+    num_waypoints: int = 10,
+    std_waypoint_interval: float = 0.15,
+    turn_yaw_deg: float = 90.0,
+    corner_index: int | None = None,
+):
+    """
+    직각(ㄱ자) path 생성:
+    - 시작: x 방향 직진
+    - 어떤 index에서 90도 꺾어서 y 방향으로 진행 (L자)
+    - yaw는 코너 전까지 0, 이후부터 turn_yaw_deg (기본 90도)
+
+    반환: [N, 3] = (x, y, yaw_orig)
+    """
+    N = num_waypoints
+    if N < 2:
+        raise ValueError("num_waypoints must be >= 2")
+
+    if corner_index is None:
+        # 중간쯤에서 꺾이게
+        corner_index = N // 2
+
+    corner_index = max(1, min(corner_index, N - 1))
+
+    interval = std_waypoint_interval
+
+    x = np.zeros(N)
+    y = np.zeros(N)
+    yaw = np.zeros(N)
+
+    turn_yaw = np.deg2rad(turn_yaw_deg)
+
+    # 코너 전: x 방향 직진, yaw = 0
+    for k in range(corner_index):
+        x[k] = interval * k
+        y[k] = 0.0
+        yaw[k] = 0.0
+
+    # 코너 이후: y 방향 직진, yaw = turn_yaw
+    x_corner = interval * (corner_index - 1)
+    for k in range(corner_index, N):
+        x[k] = x_corner
+        y[k] = interval * (k - corner_index + 1)
+        yaw[k] = turn_yaw
 
     waypoints = np.stack([x, y, yaw], axis=-1)
     return waypoints
@@ -163,34 +216,30 @@ if __name__ == "__main__":
     std_waypoint_interval = 0.15
     spline_angle_deg = 90.0  # 90도 코너 예시
 
-    # 1) 원래 path 생성
-    base_wp = generate_arc_waypoints(
-        num_waypoints=num_waypoints,
-        std_waypoint_interval=std_waypoint_interval,
-        spline_angle_deg=spline_angle_deg,
-    )
+    # "arc" / "right_angle" 중 선택
+    path_type = "arc"          # 부드러운 코너
+    # path_type = "right_angle"  # 직각 L자 코너
+
+    if path_type == "arc":
+        base_wp = generate_arc_waypoints(
+            num_waypoints=num_waypoints,
+            std_waypoint_interval=std_waypoint_interval,
+            spline_angle_deg=spline_angle_deg,
+        )
+    elif path_type == "right_angle":
+        base_wp = generate_right_angle_waypoints(
+            num_waypoints=num_waypoints,
+            std_waypoint_interval=std_waypoint_interval,
+            turn_yaw_deg=spline_angle_deg,
+            corner_index=None,  # None이면 가운데쯤에서 꺾임
+        )
+    else:
+        raise ValueError(f"Unknown path_type: {path_type}")
+
     psi_orig = base_wp[:, 2]
 
-    # # 2) 여러 g에 대해 yaw만 warp
-    # g_list = [0.0, 0.3, 0.7, 1.0]
-    # # g_list = [0.0, 0.05, 0.1, 0.8]
-    # yaw_profiles = {}
-    # for g in g_list:
-    #     psi_cmd = ayro_yaw_profile(
-    #         psi_orig,
-    #         g,
-    #         zeta_min=0.35,
-    #         zeta_max=1.0,
-    #         omega_min=3.0,
-    #         omega_max=8.0,
-    #         blend=False,   # 지금 IsaacLab 구현과 맞추려면 False
-    #     )
-    #     yaw_profiles[f"g={g:.1f}"] = psi_cmd
-
-
-    # 2) 여러 g에 대해 yaw만 warp
-    g_list = [0.0, 0.0, 0.0, 1.0]
-    # g_list = [0.0, 0.05, 0.1, 0.8]
+    # 여러 g에 대해 yaw warp
+    g_list = [0.0, 0.3, 0.7, 1.0]
     yaw_profiles = {}
     for g in g_list:
         psi_cmd = ayro_yaw_profile(
@@ -200,11 +249,9 @@ if __name__ == "__main__":
             zeta_max=1.0,
             omega_min=3.0,
             omega_max=8.0,
-            blend=False,   # 지금 IsaacLab 구현과 맞추려면 False
+            blend=False,   # IsaacLab 구현과 맞추려면 False
         )
         yaw_profiles[f"g={g:.1f}"] = psi_cmd
 
-
-
-    title = f"AYRO yaw-only shaping (N={num_waypoints}, ds={std_waypoint_interval}, ψ_goal={spline_angle_deg}°)"
+    title = f"{path_type} - AYRO yaw-only shaping (N={num_waypoints}, ds={std_waypoint_interval}, ψ_goal={spline_angle_deg}°)"
     plot_paths(base_wp, yaw_profiles, title=title)

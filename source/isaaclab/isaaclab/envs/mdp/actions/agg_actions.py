@@ -123,37 +123,40 @@ class AggressivenessAction(ActionTerm):
 
         actions: [num_envs, 1] in [-1, 1]
         """
-        # 1) raw 저장
-        self._raw_actions[:] = actions
+        # # 1) raw 저장
+        # self._raw_actions[:] = actions
+        # # 2) affine 변환: g = scale * a + offset # TODO
+        # g = self._raw_actions * self._scale + self._offset  # [-1,1] → [0,1] 기본
+        # # NEW add: aggressiveness scalar g
+        # # print("is this working?")
+        # # print("actions? ", actions)
+        # # print("g scaled: ", g)
+        # # print("_scale: ", self._scale)
+        # # print("_offset: ", self._offset)
 
-        # 2) affine 변환: g = scale * a + offset
-        g = self._raw_actions * self._scale + self._offset  # [-1,1] → [0,1] 기본
+        # # 3) [0,1]로 클램핑
+        # g = torch.clamp(g, 0.0, 1.0)
 
-        # 3) [0,1]로 클램핑
-        g = torch.clamp(g, 0.0, 1.0)
+
+        # NEW add: aggressiveness scalar g
+        self._raw_actions[:] = actions                 # actor output (혹시라도 [-1,1] 벗어나도 방어)
+        g_raw = torch.tanh(self._raw_actions)          # 확실하게 [-1,1]로 자르기
+        g = g_raw * self._scale + self._offset  # [-1,1] → [0,1] 기본
+        g = torch.clamp(g, 0.0, 1.0)                   # 수치 안전용
+
+
 
         # 4) processed 버퍼에 저장
         self._processed_actions[:] = g
 
+
+
+
+
         # 5) env 전역 버퍼에 [num_envs] 형태로 저장
         #    path_command._update_command() 에서 self.env.ayro_g로 사용
         self._env.ayro_g[:] = g.squeeze(-1)
-
-        ##########################################################################
-        # If no aggressive yaw needed (for original code)
-        # g를 항상 0으로 고정
-        g = torch.zeros_like(self._raw_actions, device=self.device)
-
-        # processed_actions에도 0 저장
-        self._processed_actions[:] = g
-
-        # env 전역 버퍼에도 0 저장 → path_command에서는 g=0으로 동작
-        if not hasattr(self._env, "ayro_g"):
-            self._env.ayro_g = torch.zeros(self.num_envs, device=self.device)
-        else:
-            self._env.ayro_g[:] = 0.0
-        ##########################################################################
-
+        # print("g in action process: ", self._env.ayro_g[:])
 
 
 

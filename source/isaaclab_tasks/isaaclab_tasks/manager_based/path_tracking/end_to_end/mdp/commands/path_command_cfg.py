@@ -42,6 +42,9 @@ class PathCommandCfg(CommandTermCfg):
     std_waypoint_interval: float = 0.15
     """Standard distance between two waypoint along the path [m] correspondent to v = 1m/s."""
 
+    # NEW add: aggressiveness scalar g
+    use_ayro = True
+    
     # NEW add
     # max_speed: float = 2.0
     max_speed: float = 5.0

@@ -363,6 +363,17 @@ def action_rate_l2(env: ManagerBasedRLEnv, action_name: str | None = None) -> to
 """
 Optional.
 """
+# NEW add: aggressiveness scalar g
+def g_rate_l2(env: ManagerBasedRLEnv) -> torch.Tensor:
+    """마지막 action 차원(g)의 변화량에 대한 L2 패널티 (processed g 기준)."""
+    act  = env.action_manager.action      # [num_envs, 17] (processed)
+    prev = env.action_manager.prev_action # [num_envs, 17] (processed)
+
+    g      = act[:, -1]       # 현재 step g (0~1 기대)
+    g_prev = prev[:, -1]      # 이전 step g
+
+    return torch.square(g - g_prev)
+
 
 
 def task_difficulty_reward(env: ManagerBasedRLEnv, command_name: str = "path_command") -> torch.Tensor:

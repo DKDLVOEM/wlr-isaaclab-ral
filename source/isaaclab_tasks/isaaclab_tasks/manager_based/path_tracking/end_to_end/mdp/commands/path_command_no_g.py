@@ -746,9 +746,7 @@ class PathCommand(CommandTerm):
             g = self._env.ayro_g                       # (num_envs,) in [0,1]
         else:
             g = torch.zeros(self.num_envs, device=self.device)
-        
-        # print("g in train: ", g)
-        print("self._env.ayro_g in train: ", self._env.ayro_g)
+
         # NEW add: usage of g
         # baseline (g 무시) 모드일 때:
         # g = torch.zeros(self.num_envs, device=self.device)
@@ -799,24 +797,21 @@ class PathCommand(CommandTerm):
 
 
 
-        # print("use ayro ? : ", self.cfg.use_ayro )
+        # NEW add: choose blending
+        # yaw_profile = (1.0 - g_expanded) * psi_orig + g_expanded * psi_2nd
+        # yaw_profile_fixed = (1.0 - g_expanded) * psi_orig_fixed + g_expanded * psi_2nd_fixed
+        # 일단은 blend 안하는걸로
+
+        # no blending
+        g_expanded_no = 1
+        yaw_profile = (1.0 - g_expanded_no) * psi_orig + g_expanded_no * psi_2nd
+        yaw_profile_fixed = (1.0 - g_expanded_no) * psi_orig_fixed + g_expanded_no * psi_2nd_fixed
         
 
         # # NEW add: choose usage of g
         # # no update g
-        if self.cfg.use_ayro:
-            # NEW add: choose blending
-            # yaw_profile = (1.0 - g_expanded) * psi_orig + g_expanded * psi_2nd
-            # yaw_profile_fixed = (1.0 - g_expanded) * psi_orig_fixed + g_expanded * psi_2nd_fixed
-            # 일단은 blend 안하는걸로
-
-            # no blending
-            g_expanded_no = 1
-            yaw_profile = (1.0 - g_expanded_no) * psi_orig + g_expanded_no * psi_2nd
-            yaw_profile_fixed = (1.0 - g_expanded_no) * psi_orig_fixed + g_expanded_no * psi_2nd_fixed
-        else:
-            yaw_profile =  psi_orig 
-            yaw_profile_fixed =  psi_orig_fixed 
+        yaw_profile =  psi_orig 
+        yaw_profile_fixed =  psi_orig_fixed 
 
 
         # -----------------------------

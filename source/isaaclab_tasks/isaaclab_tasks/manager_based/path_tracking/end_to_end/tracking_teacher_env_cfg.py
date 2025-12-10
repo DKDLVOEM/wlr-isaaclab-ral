@@ -37,6 +37,7 @@ LEG_BODY_NAMES = [".*HIP", ".*THIGH", ".*SHANK"]
 WHEEL_JOINT_NAMES = [".*WHEEL"]
 WHEEL_BODY_NAMES = [".*WHEEL_L"]
 
+USE_AYRO = True
 ##
 # Scene definition
 ##
@@ -49,7 +50,9 @@ class MySceneCfg(InteractiveSceneCfg):
     # ground terrain
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="generator",
+        # NEW add: aggressiveness scalar g
+        # terrain_type="generator",
+        terrain_type="plane",
         terrain_generator=AOWD_TERRAINS_CFG,
         max_init_terrain_level=5,
         collision_group=-1,
@@ -122,6 +125,8 @@ class CommandsCfg:
             "resolution": [10.0, 10.0, 0.2, 1],
             "initial_params": [30.0, 40.0, 0.2, 0],
         },
+        # NEW add: aggressiveness scalar g
+        use_ayro = USE_AYRO,
         # NEW add
         # max_speed=1.0,
         max_speed=5.0,
@@ -548,6 +553,9 @@ class RewardsCfg:
     #### Action Rate Penalties ########################################################################
     action_rate_l2_legs = RewTerm(func=mdp.action_rate_l2, weight=-0.01, params={"action_name": "leg_joint_pos"})
     action_rate_l2_wheels = RewTerm(func=mdp.action_rate_l2, weight=-0.01, params={"action_name": "wheel_joint_vel"})
+    # NEW add: aggressiveness scalar g
+    g_rate_l2 = RewTerm(func=mdp.g_rate_l2, weight=-0.005)
+    
 
     #### Termination Penalty ##########################################################################
     episode_termination = RewTerm(
