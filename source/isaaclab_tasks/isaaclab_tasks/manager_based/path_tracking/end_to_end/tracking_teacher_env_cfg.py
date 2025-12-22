@@ -121,17 +121,12 @@ class CommandsCfg:
             "spline_angle_range": (0.0, 120.0),
             "rotate_angle_range": (0.0, 150.0),
             # NEW add 
-            # "pos_tolerance_range": (0.2, 0.2),
-            # "pos_tolerance_range": (0.08, 0.08),
+            # "pos_tolerance_range": (0.2, 0.2), # original
             "pos_tolerance_range": (0.35, 0.35),
-            
             "terrain_level_range": (0, 0),
             "resolution": [10.0, 10.0, 0.2, 1],
             "initial_params": [30.0, 40.0, 0.35, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
-            # NEW add 
-            # "initial_params": [30.0, 40.0, 0.08, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
         },
-            # "initial_params": [30.0, 40.0, 0.2, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
 
         # NEW add: aggressiveness scalar g
         use_ayro = USE_AYRO,
