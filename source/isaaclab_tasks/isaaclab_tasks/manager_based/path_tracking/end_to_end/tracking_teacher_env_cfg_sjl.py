@@ -113,9 +113,8 @@ class CommandsCfg:
         asset_name="robot",
         resampling_time_range=(1000000.0, 1000000.0),
         debug_vis=True,
-        # NEW add waypoint
         num_waypoints=10,
-        # num_waypoints=20,
+        # MOE Config
         path_config={
             "spline_angle_range": (0.0, 120.0),
             "rotate_angle_range": (0.0, 150.0),
@@ -124,11 +123,42 @@ class CommandsCfg:
             "resolution": [10.0, 10.0, 0.2, 1],
             "initial_params": [30.0, 40.0, 0.2, 0],
         },
-        # NEW add
-        # max_speed=1.0,
-        # max_speed=5.0,
-        max_speed=7.0,
+        max_speed=4.5,
         rel_standing_envs=0.0,
+
+        # Straight Config
+        # path_config = {
+        #     "spline_angle_range": (0.0, 8.0),      
+        #     "rotate_angle_range": (0.0, 8.0),
+        #     "pos_tolerance_range": (0.15, 0.2),   
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 8.0, 0.2, 1],
+        #     "initial_params": [6.0, 6.0, 0.20, 0],
+        # },
+        # max_speed=7.0,
+
+        # Turn Config
+        # path_config = {
+        #     "spline_angle_range": (8.0, 80.0),     
+        #     "rotate_angle_range": (12.0, 100.0),
+        #     "pos_tolerance_range": (0.20, 0.2),   
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 10.0, 0.2, 1],
+        #     "initial_params": [18.0, 40.0, 0.20, 0],
+        # },
+        # max_speed = 1.5,
+
+        # # Drift Config
+        # path_config = {
+        #     "spline_angle_range": (60.0, 120.0),   
+        #     "rotate_angle_range": (60.0, 150.0),
+        #     "pos_tolerance_range": (0.25, 0.3),   
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 12.0, 0.2, 1],
+        #     "initial_params": [60.0, 60.0, 0.25, 0],
+        # },
+        # max_speed = 4.5,
+        # rel_standing_envs=0.0,
     )
 
 
@@ -144,12 +174,6 @@ class ActionsCfg:
     wheel_joint_vel = mdp.JointVelocityActionCfg(
         asset_name="robot", joint_names=WHEEL_JOINT_NAMES, scale=5.0, use_default_offset=True
     )
-    # NEW add: aggressiveness scalar g
-    yaw_aggressiveness = mdp.AggressivenessActionCfg(
-        asset_name="robot",
-        scale=0.5, # [-1,1] 그대로 받게 두고, mapping 은 ActionTerm 안에서
-        offset=0.5, # [-1,1] 그대로 받게 두고, mapping 은 ActionTerm 안에서
-    )
 
 
 @configclass
@@ -160,6 +184,31 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for the policy group."""
 
+        ###############################################
+        # 1. proprioceptive group
+        ###############################################
+        joint_pos = ObsTerm(
+            func=mdp.joint_pos,
+            params={"asset_cfg": SceneEntityCfg("robot", joint_names=LEG_JOINT_NAMES)},
+            noise=Unoise(n_min=-0.01, n_max=0.01),
+        )  # 12
+        joint_vel = ObsTerm(func=mdp.joint_vel, noise=Unoise(n_min=-1.5, n_max=1.5))  # 16
+        last_actions = ObsTerm(func=mdp.last_action)  # 16
+        last_last_actions = ObsTerm(func=mdp.last_last_action)  # 16
+        projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))  # 3
+        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))  # 3
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))  # 3
+        """These two obs update at sim update period (200Hz). For performance reasons, they should be kept minimal."""
+        
+        waypoints_list_fixed = ObsTerm(
+            func=mdp.waypoints_list_fixed, noise=Unoise(n_min=-0.01, n_max=0.01)
+        )  # num_waypoints*3
+
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = True
+    
+    class CriticCfg(ObsGroup):
         ###############################################
         # 1. proprioceptive group
         ###############################################
@@ -267,13 +316,10 @@ class ObservationsCfg:
         # )  # 1
         # push_velocity = ObsTerm(func=mdp.push_velocity)  # 6
 
-        def __post_init__(self):
-            self.enable_corruption = False
-            self.concatenate_terms = True
 
     # share the same observation for actor and critic
     policy: PolicyCfg = PolicyCfg()
-
+    critic: CriticCfg = CriticCfg()
 
 @configclass
 class EventCfg:
@@ -464,46 +510,40 @@ class RewardsCfg:
         weight=-0.01,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=WHEEL_JOINT_NAMES)},
     )
-
-    #### Optional Rewards ############################################################################
-    # body_stumble = RewTerm(
-    #     func=mdp.body_stumble, weight= 2e-3,
-    #     params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=WHEEL_BODY_NAMES), "threshold": 2.0, 
-    #             "asset_cfg": SceneEntityCfg("robot", body_names=WHEEL_BODY_NAMES) },
-    # )
-    # feet_air_time = RewTerm(
-    #     func=mdp.feet_air_time_rw,
-    #     weight=-1.0,
-    #     params={
-    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=WHEEL_BODY_NAMES),
-    #         "threshold": 0.2,
-    #     },
-    # )
-    # flat_orientation_l2_slope = RewTerm(
-    #     func=mdp.flat_orientation_l2_slope,
-    #     weight=-1.0,
-    # )
-    # lateral_movement = RewTerm(
-    #     func=mdp.lateral_movement,
-    #     weight=-0.0,
-    # )
-    # backward_movement = RewTerm(
-    #     func=mdp.backwards_movement,
-    #     params={"threshold": -0.1}, # speed threshold
-    #     weight=-5.0,
-    # )
-    # no_robot_movement = RewTerm(
-    #     func=mdp.no_robot_movement,
-    #     weight=-1.0,
-    #     params={"goal_distance_thresh": 0.1},
-    # )
+    # # MoE Only
     # near_goal_stability = RewTerm(
     #     func=mdp.near_goal_stability,
     #     weight=-1.0,
     #     params={"goal_distance_thresh": 0.1},
     # )
+    # straight_speed_bonus = RewTerm(func=mdp.straight_speed_bonus, weight=0.5) 
+    # corner_smooth_turn    = RewTerm(func=mdp.corner_smooth_turn_bonus, weight=0.7)
+    # sharp_turn_pivot      = RewTerm(func=mdp.sharp_turn_pivot_bonus, weight=0.3)
+    # hard_brake            = RewTerm(func=mdp.hard_brake_bonus, weight=0.001)
+    # # --- Drift-specific rewards (enable only in drift expert) ---
+    # drift_slip_angle = RewTerm(
+    #     func=mdp.drift_slip_angle, 
+    #     weight=0.8,
+    #     params={"target_deg": (10.0, 25.0), "min_speed": 1.0}
+    # )
 
+    # drift_yaw_rate_tracking = RewTerm(
+    #     func=mdp.drift_yaw_rate_tracking,  
+    #     weight=0.4,
+    #     params={"sigma": 1.0, "kappa_scale": 1.0}  # clamp keeps it bounded
+    # )
 
+    # drift_speed_band = RewTerm(
+    #     func=mdp.speed_band,  
+    #     weight=0.3,
+    #     params={"lo": 1.5, "hi": 3.0}
+    # )
+
+    # drift_progress_bonus = RewTerm(
+    #     func=mdp.drift_progress_bonus,  
+    #     weight=0.3,
+    #     params={"beta_min_deg": 8.0}
+    # )
 
 @configclass
 class TerminationsCfg:

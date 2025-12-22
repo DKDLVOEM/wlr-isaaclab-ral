@@ -748,7 +748,7 @@ class PathCommand(CommandTerm):
             g = torch.zeros(self.num_envs, device=self.device)
         
         # print("g in train: ", g)
-        print("self._env.ayro_g in train: ", self._env.ayro_g)
+        # print("self._env.ayro_g in train: ", self._env.ayro_g)
         # NEW add: usage of g
         # baseline (g 무시) 모드일 때:
         # g = torch.zeros(self.num_envs, device=self.device)

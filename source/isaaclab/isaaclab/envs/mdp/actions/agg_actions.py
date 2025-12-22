@@ -125,6 +125,8 @@ class AggressivenessAction(ActionTerm):
         """
         # # 1) raw 저장
         # self._raw_actions[:] = actions
+        # print("_raw_actions ayro: ", self._raw_actions)
+
         # # 2) affine 변환: g = scale * a + offset # TODO
         # g = self._raw_actions * self._scale + self._offset  # [-1,1] → [0,1] 기본
         # # NEW add: aggressiveness scalar g
@@ -140,8 +142,9 @@ class AggressivenessAction(ActionTerm):
 
         # NEW add: aggressiveness scalar g
         self._raw_actions[:] = actions                 # actor output (혹시라도 [-1,1] 벗어나도 방어)
-        g_raw = torch.tanh(self._raw_actions)          # 확실하게 [-1,1]로 자르기
-        g = g_raw * self._scale + self._offset  # [-1,1] → [0,1] 기본
+        # g_raw = torch.tanh(self._raw_actions)          # 확실하게 [-1,1]로 자르기
+        # g = g_raw * self._scale + self._offset  # [-1,1] → [0,1] 기본
+        g = self._raw_actions * self._scale + self._offset  # [-1,1] → [0,1] 기본
         g = torch.clamp(g, 0.0, 1.0)                   # 수치 안전용
 
 

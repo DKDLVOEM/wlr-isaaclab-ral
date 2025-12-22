@@ -120,18 +120,61 @@ class CommandsCfg:
         path_config={
             "spline_angle_range": (0.0, 120.0),
             "rotate_angle_range": (0.0, 150.0),
-            "pos_tolerance_range": (0.2, 0.2),
+            # NEW add 
+            # "pos_tolerance_range": (0.2, 0.2),
+            # "pos_tolerance_range": (0.08, 0.08),
+            "pos_tolerance_range": (0.35, 0.35),
+            
             "terrain_level_range": (0, 0),
             "resolution": [10.0, 10.0, 0.2, 1],
-            "initial_params": [30.0, 40.0, 0.2, 0],
+            "initial_params": [30.0, 40.0, 0.35, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
+            # NEW add 
+            # "initial_params": [30.0, 40.0, 0.08, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
         },
+            # "initial_params": [30.0, 40.0, 0.2, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
+
         # NEW add: aggressiveness scalar g
         use_ayro = USE_AYRO,
         # NEW add
         # max_speed=1.0,
         max_speed=5.0,
+        # max_speed=4.5,
         rel_standing_envs=0.0,
-    )
+
+        # Straight Config
+        # path_config = {
+        #     "spline_angle_range": (0.0, 8.0),      
+        #     "rotate_angle_range": (0.0, 8.0),
+        #     "pos_tolerance_range": (0.15, 0.2),   
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 8.0, 0.2, 1],
+        #     "initial_params": [6.0, 6.0, 0.20, 0],
+        # },
+        # max_speed=7.0,
+
+        # Turn Config
+        # path_config = {
+        #     "spline_angle_range": (8.0, 80.0),     
+        #     "rotate_angle_range": (12.0, 100.0),
+        #     "pos_tolerance_range": (0.20, 0.2),   
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 10.0, 0.2, 1],
+        #     "initial_params": [18.0, 40.0, 0.20, 0],
+        # },
+        # max_speed = 1.5,
+
+        # # Drift Config
+        # path_config = {
+        #     "spline_angle_range": (60.0, 120.0),   
+        #     "rotate_angle_range": (60.0, 150.0),
+        #     "pos_tolerance_range": (0.25, 0.3),   
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 12.0, 0.2, 1],
+        #     "initial_params": [60.0, 60.0, 0.25, 0],
+        # },
+        # max_speed = 4.5,
+        # rel_standing_envs=0.0,    
+        )
 
 
 @configclass
@@ -406,14 +449,28 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
+    # # startup
+    # physics_material = EventTerm(
+    #     func=mdp.randomize_rigid_body_material,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
+    #         "static_friction_range": (0.5, 1.5),
+    #         "dynamic_friction_range": (0.5, 1.5),
+    #         "restitution_range": (0.0, 0.0),
+    #         "num_buckets": 64,
+    #     },
+    # )
+
+    # NEW add: change range of friction
     # startup
     physics_material = EventTerm(
         func=mdp.randomize_rigid_body_material,
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.5, 1.5),
-            "dynamic_friction_range": (0.5, 1.5),
+            "static_friction_range": (0.1, 1.5),
+            "dynamic_friction_range": (0.1, 1.5),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 64,
         },
@@ -483,7 +540,8 @@ class RewardsCfg:
 
     #### Tracking rewards ############################################################################
     track_pos_error = RewTerm(func=mdp.track_pos_xy_exp, weight=2.0, params={"use_tanh": False})
-    track_speed_up = RewTerm(func=mdp.tracking_speed_up, weight=1.0, params={"goal_distance_thresh": 0.1, "std": 1.0})
+    # track_speed_up = RewTerm(func=mdp.tracking_speed_up, weight=1.0, params={"goal_distance_thresh": 0.1, "std": 1.0})
+    track_speed_up = RewTerm(func=mdp.tracking_speed_up, weight=4.0, params={"goal_distance_thresh": 0.1, "std": 1.0})
 
     #### Behavior rewards ############################################################################
 
@@ -502,6 +560,7 @@ class RewardsCfg:
     ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.5)
 
     # 2. Near the goal
+    # goal_position = RewTerm(func=mdp.goal_position, weight=1.2, params={"goal_distance_thresh": 0.5})
     goal_position = RewTerm(func=mdp.goal_position, weight=0.5, params={"goal_distance_thresh": 0.5})
     goal_orientation = RewTerm(func=mdp.goal_orientation, weight=0.0, params={"goal_distance_thresh": 0.2})
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2_thr, weight=-1.0, params={"goal_distance_thresh": 0.2})
@@ -554,7 +613,11 @@ class RewardsCfg:
     action_rate_l2_legs = RewTerm(func=mdp.action_rate_l2, weight=-0.01, params={"action_name": "leg_joint_pos"})
     action_rate_l2_wheels = RewTerm(func=mdp.action_rate_l2, weight=-0.01, params={"action_name": "wheel_joint_vel"})
     # NEW add: aggressiveness scalar g
-    g_rate_l2 = RewTerm(func=mdp.g_rate_l2, weight=-0.005)
+    # g_rate_l2 = RewTerm(func=mdp.g_rate_l2, weight=-0.01)
+    g_rate_l2 = RewTerm(func=mdp.g_rate_l2, weight=-0.0)
+    # g_l2 = RewTerm(func=mdp.g_l2, weight=-0.01)
+    g_l2 = RewTerm(func=mdp.g_l2, weight=-0.03)
+    track_yaw_exp = RewTerm(func=mdp.track_yaw_exp, weight=0.1, params={"std": 0.2})
     
 
     #### Termination Penalty ##########################################################################
