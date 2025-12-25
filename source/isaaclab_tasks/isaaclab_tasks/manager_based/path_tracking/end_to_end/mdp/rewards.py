@@ -660,3 +660,42 @@ def body_stumble(
     asset = env.scene[asset_cfg.name]
     FtimesV = torch.sum(contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids,:] * asset.data.root_lin_vel_w.unsqueeze(1), dim=1) #(n,3)
     return torch.clip(torch.sum(FtimesV, dim=-1), max=0.)
+
+
+# ----------------- Conditional rewards -----------------
+
+# NEW add; conditional rewrad
+def straight_speed_bonus(env, gain: float = 1.0, command_name: str = "path_command") -> torch.Tensor:
+    """
+    직진 구간에서만: 경로 접선 방향 속도(기존 tracking_speed_up과 유사)를 추가 보상.
+    """
+    from isaaclab.assets import Articulation
+    asset: Articulation = env.scene["robot"]
+
+
+
+    wp_b = _extract_wp_b(env, command_name)  # (N,W,3)
+    # 로봇 기준 경로 접선 벡터(앞쪽 구간의 평균 yaw)
+    dyaw = (wp_b[:, 2, 2] - wp_b[:, 1, 2] + np.pi) % (2*np.pi) - np.pi
+    dir_yaw = (wp_b[:, 1, 2] + 0.5*dyaw + np.pi) % (2*np.pi) - np.pi
+    t_hat = torch.stack([torch.cos(dir_yaw), torch.sin(dir_yaw)], dim=1)  # (N,2)
+
+    v_proj = (asset.data.root_lin_vel_b[:, :2] * t_hat).sum(dim=1)  # (N,)
+
+
+    # 뒤로 가는 속도는 억제(선택): enable_backward=False라면 음수 속도 감점도 고려 가능
+    bonus = gain * v_proj.clamp(min=0.0) 
+    return bonus
+
+
+######################################################################################
+# NEW add
+# ===== Waypoint-based segment classification & conditional rewards =====
+import torch
+import numpy as np
+
+def _extract_wp_b(env, command_name: str = "path_command"):
+    """(N, W, 3) 형태의 웨이포인트 [x,y,yaw] (로봇 기준 좌표계, 미래 → 과거 순서 그대로)"""
+    path_cmd = env.command_manager.get_term(command_name)
+    # 관측에 쓰는 버퍼는 path_cmd_generator가 이미 유지: path_command_b: (N, W, 3)
+    return path_cmd.path_command_b  # (num_envs, num_waypoints, 3)

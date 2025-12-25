@@ -121,11 +121,12 @@ class CommandsCfg:
             "spline_angle_range": (0.0, 120.0),
             "rotate_angle_range": (0.0, 150.0),
             # NEW add 
-            # "pos_tolerance_range": (0.2, 0.2), # original
-            "pos_tolerance_range": (0.35, 0.35),
+            "pos_tolerance_range": (0.2, 0.2), # original
+            # "pos_tolerance_range": (0.35, 0.35),
             "terrain_level_range": (0, 0),
             "resolution": [10.0, 10.0, 0.2, 1],
-            "initial_params": [30.0, 40.0, 0.35, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
+            # "initial_params": [30.0, 40.0, 0.35, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
+            "initial_params": [30.0, 40.0, 0.2, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
         },
 
         # NEW add: aggressiveness scalar g
@@ -444,32 +445,32 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    # # startup
-    # physics_material = EventTerm(
-    #     func=mdp.randomize_rigid_body_material,
-    #     mode="startup",
-    #     params={
-    #         "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-    #         "static_friction_range": (0.5, 1.5),
-    #         "dynamic_friction_range": (0.5, 1.5),
-    #         "restitution_range": (0.0, 0.0),
-    #         "num_buckets": 64,
-    #     },
-    # )
-
-    # NEW add: change range of friction
     # startup
     physics_material = EventTerm(
         func=mdp.randomize_rigid_body_material,
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.1, 1.5),
-            "dynamic_friction_range": (0.1, 1.5),
+            "static_friction_range": (0.5, 1.5),
+            "dynamic_friction_range": (0.5, 1.5),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 64,
         },
     )
+
+    # NEW add: change range of friction
+    # startup
+    # physics_material = EventTerm(
+    #     func=mdp.randomize_rigid_body_material,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
+    #         "static_friction_range": (0.1, 1.5),
+    #         "dynamic_friction_range": (0.1, 1.5),
+    #         "restitution_range": (0.0, 0.0),
+    #         "num_buckets": 64,
+    #     },
+    # )
 
     add_base_mass = EventTerm(
         func=mdp.randomize_rigid_body_mass,
@@ -537,6 +538,11 @@ class RewardsCfg:
     track_pos_error = RewTerm(func=mdp.track_pos_xy_exp, weight=2.0, params={"use_tanh": False})
     # track_speed_up = RewTerm(func=mdp.tracking_speed_up, weight=1.0, params={"goal_distance_thresh": 0.1, "std": 1.0})
     track_speed_up = RewTerm(func=mdp.tracking_speed_up, weight=4.0, params={"goal_distance_thresh": 0.1, "std": 1.0})
+
+
+    #### Additional rewards ############################################################################
+
+    straight_speed_bonus = RewTerm(func=mdp.straight_speed_bonus, weight=1.5)   # 직진 가속 부스트
 
     #### Behavior rewards ############################################################################
 
