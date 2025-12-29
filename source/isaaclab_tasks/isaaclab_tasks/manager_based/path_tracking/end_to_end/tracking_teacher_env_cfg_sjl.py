@@ -123,7 +123,8 @@ class CommandsCfg:
             "resolution": [10.0, 10.0, 0.2, 1],
             "initial_params": [30.0, 40.0, 0.2, 0],
         },
-        max_speed=4.5,
+        # max_speed=4.5,
+        max_speed=3.5,
         rel_standing_envs=0.0,
 
         # Straight Config
@@ -331,8 +332,10 @@ class EventCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.5, 1.5),
-            "dynamic_friction_range": (0.5, 1.5),
+            # "static_friction_range": (0.5, 1.5),
+            # "dynamic_friction_range": (0.5, 1.5),
+            "static_friction_range": (0.1, 1.5),
+            "dynamic_friction_range": (0.1, 1.5),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 64,
         },
