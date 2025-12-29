@@ -117,36 +117,35 @@ class CommandsCfg:
         resampling_time_range=(1000000.0, 1000000.0),
         debug_vis=True,
         num_waypoints=10,
-        path_config={
-            "spline_angle_range": (0.0, 120.0),
-            "rotate_angle_range": (0.0, 150.0),
-            # NEW add 
-            "pos_tolerance_range": (0.2, 0.2), # original
-            # "pos_tolerance_range": (0.35, 0.35),
-            "terrain_level_range": (0, 0),
-            "resolution": [10.0, 10.0, 0.2, 1],
-            # "initial_params": [30.0, 40.0, 0.35, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
-            "initial_params": [30.0, 40.0, 0.2, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
-        },
+
+        # Original config
+        # path_config={
+        #     "spline_angle_range": (0.0, 120.0),
+        #     "rotate_angle_range": (0.0, 150.0),
+        #     # NEW add 
+        #     "pos_tolerance_range": (0.2, 0.2), # original
+        #     # "pos_tolerance_range": (0.35, 0.35),
+        #     "terrain_level_range": (0, 0),
+        #     "resolution": [10.0, 10.0, 0.2, 1],
+        #     # "initial_params": [30.0, 40.0, 0.35, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
+        #     "initial_params": [30.0, 40.0, 0.2, 0], # [spline_angle, rotate_angle, pos_tolerance, terrain_level]
+        # },
+        # max_speed=5.0,
 
         # NEW add: aggressiveness scalar g
         use_ayro = USE_AYRO,
-        # NEW add
-        # max_speed=1.0,
-        max_speed=5.0,
-        # max_speed=4.5,
         rel_standing_envs=0.0,
 
         # Straight Config
-        # path_config = {
-        #     "spline_angle_range": (0.0, 8.0),      
-        #     "rotate_angle_range": (0.0, 8.0),
-        #     "pos_tolerance_range": (0.15, 0.2),   
-        #     "terrain_level_range": (0, 0),
-        #     "resolution": [10.0, 8.0, 0.2, 1],
-        #     "initial_params": [6.0, 6.0, 0.20, 0],
-        # },
-        # max_speed=7.0,
+        path_config = {
+            "spline_angle_range": (0.0, 8.0),      
+            "rotate_angle_range": (0.0, 8.0),
+            "pos_tolerance_range": (0.15, 0.2),   
+            "terrain_level_range": (0, 0),
+            "resolution": [10.0, 8.0, 0.2, 1],
+            "initial_params": [6.0, 6.0, 0.20, 0],
+        },
+        max_speed=7.0,
 
         # Turn Config
         # path_config = {
@@ -169,6 +168,10 @@ class CommandsCfg:
         #     "initial_params": [60.0, 60.0, 0.25, 0],
         # },
         # max_speed = 4.5,
+
+
+
+        
         # rel_standing_envs=0.0,    
         )
 
