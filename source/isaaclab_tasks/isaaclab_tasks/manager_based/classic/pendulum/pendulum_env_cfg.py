@@ -75,8 +75,8 @@ class ActionsCfg:
         joint_names=["revolute_joint"], 
         scale=1.0, 
         use_default_offset=False,
-        delay_steps=2,      # Actuator Delay
-        lpf_alpha=0.8,      # Actuator LPF (1.0 = no filter)
+        # delay_steps=2,      # Actuator Delay
+        # lpf_alpha=0.8,      # Actuator LPF (1.0 = no filter)
     )
 
 @configclass
@@ -100,26 +100,26 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for domain randomization events."""
 
-    # 1. Link Mass Randomization
-    randomize_mass = EventTerm(
-        func=mdp.randomize_rigid_body_mass,
-        mode="startup",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", body_names="pendulum_link"),
-            "mass_distribution_params": (0.8, 1.2), # Scale 0.8x to 1.2x
-            "operation": "scale",
-        },
-    )
+    # # 1. Link Mass Randomization
+    # randomize_mass = EventTerm(
+    #     func=mdp.randomize_rigid_body_mass,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names="pendulum_link"),
+    #         "mass_distribution_params": (0.8, 1.2), # Scale 0.8x to 1.2x
+    #         "operation": "scale",
+    #     },
+    # )
 
-    # 2. Link COM Randomization
-    randomize_com = EventTerm(
-        func=mdp.randomize_rigid_body_com,
-        mode="startup",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", body_names="pendulum_link"),
-            "com_range": {"x": (-0.02, 0.02), "y": (-0.02, 0.02), "z": (-0.05, 0.05)}, # Meters offset
-        },
-    )
+    # # 2. Link COM Randomization
+    # randomize_com = EventTerm(
+    #     func=mdp.randomize_rigid_body_com,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names="pendulum_link"),
+    #         "com_range": {"x": (-0.02, 0.02), "y": (-0.02, 0.02), "z": (-0.05, 0.05)}, # Meters offset
+    #     },
+    # )
 
     # 3. Joint Friction & Damping (Viscous Friction) Randomization
     randomize_joint_params = EventTerm(
@@ -148,7 +148,7 @@ class EventCfg:
     )
 
     reset_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
+        func=mdp.reset_joints_by_offset,  # scale 대신 offset 사용
         mode="reset",
         params={"position_range": (-0.5, 0.5), "velocity_range": (-0.5, 0.5)},
     )
@@ -168,6 +168,7 @@ class EventCfg:
 class RewardsCfg:
     track_pos = RewTerm(
         func=mdp.track_position_error,
+        weight=100.0,
         weight=10.0,
         params={"command_name": "trajectory", "asset_cfg": SceneEntityCfg("robot", joint_names=["revolute_joint"])}
     )

@@ -35,11 +35,18 @@ class TrajectoryCommand(CommandTerm):
         """The command tensor. Shape is (num_envs, command_dim)."""
         return self._command
 
+    # def _resample_command(self, env_ids: Sequence[int]):
+    #     self.amplitudes[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(*self.cfg.amplitude_range)
+    #     self.frequencies[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(*self.cfg.frequency_range)
+    #     self.phases[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(-3.14, 3.14)
+    #     self.step_targets[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(-1.5, 1.5)
+
     def _resample_command(self, env_ids: Sequence[int]):
-        self.amplitudes[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(*self.cfg.amplitude_range)
-        self.frequencies[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(*self.cfg.frequency_range)
-        self.phases[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(-3.14, 3.14)
-        self.step_targets[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(-1.5, 1.5)
+        self.amplitudes[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(0.5, 0.5)
+        self.frequencies[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(0.5, 0.5)
+        self.phases[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(0.0, 0.0)
+        self.step_targets[env_ids] = torch.empty(len(env_ids), device=self.device).uniform_(0.7, 0.7)
+
 
     def _update_command(self):
         current_time = self._env.sim.current_time
@@ -49,9 +56,11 @@ class TrajectoryCommand(CommandTerm):
             omega = 2 * torch.pi * self.frequencies
             self._command[:, 0] = self.amplitudes * torch.sin(omega * t)
             self.command_vel[:, 0] = self.amplitudes * omega * torch.cos(omega * t)
+
             
         elif self.cfg.trajectory_type == "step":
-            self._command[:, 0] = self.step_targets
+            # self._command[:, 0] = self.step_targets
+            self._command[:, 0] = 0.5
             self.command_vel[:, 0] = 0.0
 
     def _update_metrics(self):
