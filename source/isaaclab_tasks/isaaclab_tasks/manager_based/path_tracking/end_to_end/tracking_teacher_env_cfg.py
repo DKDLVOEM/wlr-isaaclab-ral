@@ -156,7 +156,7 @@ class CommandsCfg:
         #     "resolution": [10.0, 10.0, 0.2, 1],
         #     "initial_params": [18.0, 40.0, 0.20, 0],
         # },
-        # max_speed = 1.5,
+        # max_speed = 4.0,
 
         # # Drift Config
         # path_config = {
@@ -167,7 +167,7 @@ class CommandsCfg:
         #     "resolution": [10.0, 12.0, 0.2, 1],
         #     "initial_params": [60.0, 60.0, 0.25, 0],
         # },
-        # max_speed = 4.5,
+        # max_speed = 4.0,
 
 
 

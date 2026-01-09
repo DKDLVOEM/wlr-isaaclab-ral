@@ -825,6 +825,8 @@ class Articulation(AssetBase):
         if env_ids != slice(None) and joint_ids != slice(None):
             env_ids = env_ids[:, None]
         # set into internal buffers
+        # joint_friction_coeff = joint_friction_coeff.squeeze(-1)   # [1024,1,1] -> [1024,1]
+
         self._data.joint_friction_coeff[env_ids, joint_ids] = joint_friction_coeff
         # set into simulation
         self.root_physx_view.set_dof_friction_coefficients(
